@@ -13,7 +13,7 @@ import (
 
 // All the files that make up the GTFS spec
 const (
-	agencyFile         = "agenct.txt"
+	agencyFile         = "agency.txt"
 	stopsFile          = "stops.txt"
 	routesFile         = "routes.txt"
 	tripsFile          = "trips.txt"
@@ -30,8 +30,8 @@ const (
 
 // Feed contains all the individual parts of a GTFS Feed
 type Feed struct {
-	Agency         []*Agency
-	FeedInfo       []*FeedInfo
+	FeedInfo       *FeedInfo
+	Agencies       []*Agency
 	Stops          []*Stop
 	Routes         []*Route
 	Trips          []*Trip
@@ -47,8 +47,8 @@ type Feed struct {
 
 func NewFeed() Feed {
 	return Feed{
-		Agency:         []*Agency{},
-		FeedInfo:       []*FeedInfo{},
+		Agencies:       []*Agency{},
+		FeedInfo:       &FeedInfo{},
 		Stops:          []*Stop{},
 		Routes:         []*Route{},
 		Trips:          []*Trip{},
@@ -102,10 +102,14 @@ func LoadFromZip(archive string) Feed {
 func parse(fName string, f io.Reader, feed *Feed) {
 	var err error
 	switch fName {
-	case agencyFile:
-		err = gocsv.Unmarshal(f, &feed.Agency)
 	case feedInfoFile:
-		err = gocsv.Unmarshal(f, &feed.FeedInfo)
+		feedInfo := []*FeedInfo{}
+		err = gocsv.Unmarshal(f, &feedInfo)
+		if len(feedInfo) != 0 {
+			feed.FeedInfo = feedInfo[0]
+		}
+	case agencyFile:
+		err = gocsv.Unmarshal(f, &feed.Agencies)
 	case stopsFile:
 		err = gocsv.Unmarshal(f, &feed.Stops)
 	case routesFile:
