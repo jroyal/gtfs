@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	feed := gtfs.LoadDirectory("/users/james/downloads/capmetro")
+	feed := gtfs.LoadFromZip("/users/james/downloads/capmetro.zip")
 	for _, r := range feed.Routes {
 		fmt.Println(r)
 	}

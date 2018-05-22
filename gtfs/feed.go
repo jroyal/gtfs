@@ -1,7 +1,8 @@
 package gtfs
 
 import (
-	"fmt"
+	"archive/zip"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -29,49 +30,106 @@ const (
 
 // Feed contains all the individual parts of a GTFS Feed
 type Feed struct {
-	Agency   []*Agency
-	FeedInfo []*FeedInfo
-	Stops    []*Stop
-	Routes   []*Route
+	Agency         []*Agency
+	FeedInfo       []*FeedInfo
+	Stops          []*Stop
+	Routes         []*Route
+	Trips          []*Trip
+	StopTimes      []*StopTimes
+	Calendar       []*Calendar
+	CalendarDates  []*CalendarDate
+	FareAttributes []*FareAttribute
+	FareRules      []*FareRule
+	Shapes         []*Shape
+	Frequencies    []*Frequency
+	Transfers      []*Transfer
 }
 
-func parse(fName string, out interface{}) {
-	file, err := os.Open(fName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = gocsv.UnmarshalFile(file, out)
-	if err != nil {
-		log.Fatal(err)
+func NewFeed() Feed {
+	return Feed{
+		Agency:         []*Agency{},
+		FeedInfo:       []*FeedInfo{},
+		Stops:          []*Stop{},
+		Routes:         []*Route{},
+		Trips:          []*Trip{},
+		StopTimes:      []*StopTimes{},
+		Calendar:       []*Calendar{},
+		CalendarDates:  []*CalendarDate{},
+		FareAttributes: []*FareAttribute{},
+		FareRules:      []*FareRule{},
+		Shapes:         []*Shape{},
+		Frequencies:    []*Frequency{},
+		Transfers:      []*Transfer{},
 	}
 }
 
-// LoadDirectory takes a directory that should contain all the required GTFS files
-func LoadDirectory(dir string) Feed {
+// LoadFromDirectory takes a directory that should contain all the required GTFS files
+func LoadFromDirectory(dir string) Feed {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
-	feed := Feed{
-		Agency:   []*Agency{},
-		FeedInfo: []*FeedInfo{},
-		Stops:    []*Stop{},
-		Routes:   []*Route{},
-	}
-
-	for _, f := range files {
-		fmt.Println(f.Name())
-		path := filepath.Join(dir, f.Name())
-		switch f.Name() {
-		case agencyFile:
-			parse(path, &feed.Agency)
-		case feedInfoFile:
-			parse(path, &feed.FeedInfo)
-		case stopsFile:
-			parse(path, &feed.Stops)
-		case routesFile:
-			parse(path, &feed.Routes)
+	feed := NewFeed()
+	for _, file := range files {
+		f, err := os.Open(filepath.Join(dir, file.Name()))
+		defer f.Close()
+		if err != nil {
+			log.Fatal(err)
 		}
+		parse(file.Name(), f, &feed)
 	}
 	return feed
+}
+
+// LoadFromZip takes a zip file that should contain all the required GTFS files
+func LoadFromZip(archive string) Feed {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		log.Fatal(err)
+	}
+	feed := NewFeed()
+	for _, file := range reader.File {
+		f, err := file.Open()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		parse(file.Name, f, &feed)
+	}
+	return feed
+}
+
+func parse(fName string, f io.Reader, feed *Feed) {
+	var err error
+	switch fName {
+	case agencyFile:
+		err = gocsv.Unmarshal(f, &feed.Agency)
+	case feedInfoFile:
+		err = gocsv.Unmarshal(f, &feed.FeedInfo)
+	case stopsFile:
+		err = gocsv.Unmarshal(f, &feed.Stops)
+	case routesFile:
+		err = gocsv.Unmarshal(f, &feed.Routes)
+	case tripsFile:
+		err = gocsv.Unmarshal(f, &feed.Trips)
+	case stopTimesFile:
+		err = gocsv.Unmarshal(f, &feed.StopTimes)
+	case calendarFile:
+		err = gocsv.Unmarshal(f, &feed.Calendar)
+	case calendarDatesFile:
+		err = gocsv.Unmarshal(f, &feed.CalendarDates)
+	case fareAttributesFile:
+		err = gocsv.Unmarshal(f, &feed.FareAttributes)
+	case fareRulesFile:
+		err = gocsv.Unmarshal(f, &feed.FareRules)
+	case shapesFile:
+		err = gocsv.Unmarshal(f, &feed.Shapes)
+	case frequenciesFile:
+		err = gocsv.Unmarshal(f, &feed.Frequencies)
+	case transfersFile:
+		err = gocsv.Unmarshal(f, &feed.Transfers)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
 }
