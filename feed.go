@@ -31,22 +31,23 @@ const (
 // Feed contains all the individual parts of a GTFS Feed
 type Feed struct {
 	FeedInfo       *FeedInfo
-	Agencies       []*Agency
 	Stops          []*Stop
 	Routes         []*Route
+	Shapes         []*Shape
+	Agencies       []*Agency
 	Trips          []*Trip
 	StopTimes      []*StopTimes
 	Calendar       []*Calendar
 	CalendarDates  []*CalendarDate
 	FareAttributes []*FareAttribute
 	FareRules      []*FareRule
-	Shapes         []*Shape
 	Frequencies    []*Frequency
 	Transfers      []*Transfer
 }
 
 func NewFeed() Feed {
 	return Feed{
+		// All the individual fields if you need to get all
 		Agencies:       []*Agency{},
 		FeedInfo:       &FeedInfo{},
 		Stops:          []*Stop{},

@@ -1,5 +1,6 @@
 package gtfs
 
+// Stop is an individual location where vehicles pick up or drop off passengers
 type Stop struct {
 	ID           string `csv:"stop_id"`
 	Code         string `csv:"stop_code"`
