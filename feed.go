@@ -19,7 +19,7 @@ const (
 	tripsFile          = "trips.txt"
 	stopTimesFile      = "stop_times.txt"
 	calendarFile       = "calendar.txt"
-	calendarDatesFile  = "calender_dates.txt"
+	calendarDatesFile  = "calendar_dates.txt"
 	fareAttributesFile = "fare_attributes.txt"
 	fareRulesFile      = "fare_rules.txt"
 	shapesFile         = "shapes.txt"
